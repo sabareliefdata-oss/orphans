@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { LogOut, Search, Plus, Download, X, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 
 export default function Navbar({ onOpenNewModal, onExport, searchQuery, onSearchChange }) {
   const { user, logout } = useAuth();
@@ -14,12 +15,9 @@ export default function Navbar({ onOpenNewModal, onExport, searchQuery, onSearch
           <div className="flex items-center gap-3.5">
             <div className="h-14 w-auto flex items-center justify-center p-1 bg-[#092d3c]/50 rounded-xl border border-white/10 shadow-inner">
               <img
-                src="/logo.png"
+                src={logoImg}
                 alt="One Nation Logo"
                 className="h-11 w-auto object-contain drop-shadow"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
               />
             </div>
             <div>

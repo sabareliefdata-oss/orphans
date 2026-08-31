@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowRight, ShieldCheck, KeyRound, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import logoImg from '../assets/logo.png';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -44,12 +45,9 @@ export default function LoginPage() {
             className="p-4 rounded-3xl border shadow-2xl mb-5 flex items-center justify-center"
           >
             <img
-              src="/logo.png"
+              src={logoImg}
               alt="One Nation Logo"
               className="h-16 w-auto object-contain drop-shadow-md"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
             />
           </div>
 

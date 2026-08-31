@@ -120,11 +120,11 @@ const DB = {
     if (config.MONGODB_URI) {
       try {
         console.log('Connecting to MongoDB Atlas...');
-        await mongoose.connect(config.MONGODB_URI);
+        await mongoose.connect(config.MONGODB_URI, { dbName: 'one_nation' });
         isMongoConnected = true;
         UserModel = mongoose.model('User', userSchema);
         ScriptModel = mongoose.model('Script', scriptSchema);
-        console.log('✅ Connected to MongoDB Atlas successfully.');
+        console.log('✅ Connected to MongoDB Atlas (one_nation) successfully.');
         await this.seedMongoIfEmpty();
         return;
       } catch (err) {

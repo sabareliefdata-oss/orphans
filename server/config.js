@@ -1,9 +1,11 @@
 const path = require('path');
 require('dotenv').config();
 
+const rawMongoUri = (process.env.MONGODB_URI || '').trim().replace(/^["']|["']$/g, '');
+
 module.exports = {
   PORT: process.env.PORT || 5000,
-  MONGODB_URI: process.env.MONGODB_URI || '',
+  MONGODB_URI: rawMongoUri,
   JWT_SECRET: process.env.JWT_SECRET || 'one-nation-super-secure-jwt-2026-key',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
   DATA_DIR: path.join(__dirname, '..', 'data'),
