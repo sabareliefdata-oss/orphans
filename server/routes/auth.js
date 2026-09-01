@@ -8,29 +8,29 @@ const { generateToken, authenticateToken } = require('../auth');
 // Supports password-only login (auto-detects role) or username + password
 router.post('/login', async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const inputPassword = password || username;
+    const rawUsername = (req.body.username || '').trim();
+    const rawPassword = (req.body.password || '').trim();
+    const inputKey = rawPassword || rawUsername;
 
-    if (!inputPassword) {
+    if (!inputKey) {
       return res.status(400).json({ error: 'Password is required to sign in.' });
     }
 
-    // Get all users from DB
     const users = await DB.getAllUsers();
     let authenticatedUser = null;
 
-    // 1. If username was provided, try direct match first
-    if (username && password) {
-      const user = await DB.findUserByUsername(username);
-      if (user && (await bcrypt.compare(password, user.password_hash))) {
+    // 1. If explicit username and password were supplied, try direct username match
+    if (rawUsername && rawPassword && rawUsername !== rawPassword) {
+      const user = await DB.findUserByUsername(rawUsername);
+      if (user && (await bcrypt.compare(rawPassword, user.password_hash))) {
         authenticatedUser = user;
       }
     }
 
-    // 2. If not matched yet, check inputPassword against all user hashes (Auto-role resolution)
+    // 2. Auto-role: match inputKey against all user password hashes
     if (!authenticatedUser) {
       for (const u of users) {
-        if (await bcrypt.compare(inputPassword, u.password_hash)) {
+        if (await bcrypt.compare(inputKey, u.password_hash)) {
           authenticatedUser = u;
           break;
         }

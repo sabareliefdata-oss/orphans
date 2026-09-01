@@ -20,7 +20,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(password.trim(), password.trim());
+      await login('', password.trim());
     } catch (err) {
       setError(err.message || 'Incorrect access password. Please try again.');
     } finally {
