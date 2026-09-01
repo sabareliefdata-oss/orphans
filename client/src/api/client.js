@@ -16,8 +16,8 @@ export async function apiRequest(endpoint, options = {}) {
     headers
   });
 
-  if (response.status === 401) {
-    // If unauthorized, clear token and notify
+  // Only dispatch unauthorized event if it's NOT a login attempt
+  if (response.status === 401 && !endpoint.includes('/auth/login')) {
     localStorage.removeItem('on_token');
     localStorage.removeItem('on_user');
     window.dispatchEvent(new Event('auth:unauthorized'));
@@ -27,7 +27,7 @@ export async function apiRequest(endpoint, options = {}) {
   if (contentType && contentType.includes('application/json')) {
     const data = await response.json();
     if (!response.ok) {
-      throw new Error(data.error || 'An unexpected error occurred');
+      throw new Error(data.error || 'Authentication or request error');
     }
     return data;
   }

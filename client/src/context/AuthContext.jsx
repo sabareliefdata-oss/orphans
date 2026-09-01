@@ -27,7 +27,9 @@ export function AuthProvider({ children }) {
           localStorage.setItem('on_user', JSON.stringify(res.user));
         })
         .catch(() => {
-          logout();
+          localStorage.removeItem('on_token');
+          localStorage.removeItem('on_user');
+          setUser(null);
         })
         .finally(() => setLoading(false));
     } else {
@@ -51,7 +53,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem('on_token', data.token);
     localStorage.setItem('on_user', JSON.stringify(data.user));
     setUser(data.user);
-    showToast(`Welcome back, ${data.user.name}!`);
+    showToast(`Welcome, ${data.user.name}!`);
     return data.user;
   };
 
