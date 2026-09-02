@@ -20,17 +20,17 @@ export default function App() {
 
   const [currentTab, setCurrentTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('table'); // Default: Table List View, toggleable to 'grid'
+  const [viewMode, setViewMode] = useState('grid'); // Default: Grid Cards View
 
   // Modals state
   const [isScriptModalOpen, setIsScriptModalOpen] = useState(false);
   const [editingScript, setEditingScript] = useState(null);
 
-  // Fetch scripts & stats
-  const fetchData = async () => {
+  // Fetch scripts & stats (with optional silent background refresh)
+  const fetchData = async (showLoader = true) => {
     if (!user) return;
     try {
-      setLoading(true);
+      if (showLoader) setLoading(true);
       const params = new URLSearchParams();
       if (currentTab !== 'all') params.append('status', currentTab);
       if (searchQuery) params.append('search', searchQuery);
@@ -46,54 +46,84 @@ export default function App() {
       console.error('Error loading data:', err);
       showToast(err.message || 'Failed to fetch scripts.', 'error');
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   };
 
   useEffect(() => {
     if (user) {
-      fetchData();
+      fetchData(true);
     }
   }, [currentTab, searchQuery, user]);
 
-  // Handle save (create / update)
+  // Handle save (create / update) with zero scroll-jump
   const handleSaveScript = async (data, id) => {
     try {
       if (id) {
-        await apiRequest(`/scripts/${id}`, {
+        const res = await apiRequest(`/scripts/${id}`, {
           method: 'PUT',
           body: JSON.stringify(data)
         });
+        if (res.script) {
+          setScripts(prev => prev.map(s => s.id === id ? res.script : s));
+        }
         showToast('Script updated successfully!');
       } else {
-        await apiRequest('/scripts', {
+        const res = await apiRequest('/scripts', {
           method: 'POST',
           body: JSON.stringify(data)
         });
+        if (res.script) {
+          setScripts(prev => [...prev, res.script]);
+        }
         showToast('New script added in Waiting status!');
       }
-      fetchData();
+
+      // Silent stats update without resetting scroll
+      apiRequest('/scripts/stats').then(setStats).catch(() => {});
     } catch (err) {
       showToast(err.message || 'Failed to save script.', 'error');
       throw err;
     }
   };
 
-  // Handle status toggle (Approve / Return to Waiting)
+  // Handle status toggle (Approve / Return to Waiting) smoothly in-place
   const handleStatusToggle = async (id, newStatus) => {
     try {
-      await apiRequest(`/scripts/${id}/status`, {
+      // 1. Optimistic in-place update (keeps exact scroll position)
+      setScripts(prev => prev.map(s => {
+        if (s.id === id) {
+          return {
+            ...s,
+            status: newStatus,
+            reviewed_by: newStatus === 'approved' ? (user ? user.name : 'Reviewer') : null,
+            reviewed_at: newStatus === 'approved' ? new Date().toISOString() : null
+          };
+        }
+        return s;
+      }));
+
+      // 2. Call API
+      const res = await apiRequest(`/scripts/${id}/status`, {
         method: 'PATCH',
         body: JSON.stringify({ status: newStatus })
       });
+
+      if (res.script) {
+        setScripts(prev => prev.map(s => s.id === id ? res.script : s));
+      }
+
       showToast(
         newStatus === 'approved'
           ? 'Script marked as Reviewed & Approved (Green)!'
           : 'Script returned to Waiting for Review (Yellow).'
       );
-      fetchData();
+
+      // 3. Update stats silently in background
+      apiRequest('/scripts/stats').then(setStats).catch(() => {});
     } catch (err) {
       showToast(err.message || 'Failed to update status.', 'error');
+      fetchData(false);
     }
   };
 
@@ -104,10 +134,12 @@ export default function App() {
       await apiRequest(`/scripts/${id}`, {
         method: 'DELETE'
       });
+      setScripts(prev => prev.filter(s => s.id !== id));
       showToast('Script deleted successfully.');
-      fetchData();
+      apiRequest('/scripts/stats').then(setStats).catch(() => {});
     } catch (err) {
       showToast(err.message || 'Failed to delete script.', 'error');
+      fetchData(false);
     }
   };
 
@@ -117,7 +149,7 @@ export default function App() {
     try {
       const res = await apiRequest('/scripts/resequence', { method: 'POST' });
       showToast(res.message);
-      fetchData();
+      fetchData(false);
     } catch (err) {
       showToast(err.message || 'Failed to resequence serials.', 'error');
     }
@@ -237,7 +269,7 @@ export default function App() {
             )}
           </div>
         ) : viewMode === 'grid' ? (
-          /* Side-by-Side Responsive Grid Cards Layout */
+          /* Side-by-Side Responsive Grid Cards Layout (Default) */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {scripts.map((script) => (
               <ScriptCard
