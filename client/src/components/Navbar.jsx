@@ -7,6 +7,18 @@ export default function Navbar({ onOpenNewModal, onExport, searchQuery, onSearch
   const { user, logout } = useAuth();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  const getRoleLabel = () => {
+    if (user?.role === 'admin') return 'Translator / Admin';
+    if (user?.role === 'reviewer') return 'Reviewer';
+    return 'Viewer (Read-Only)';
+  };
+
+  const getRoleInitial = () => {
+    if (user?.role === 'admin') return 'A';
+    if (user?.role === 'reviewer') return 'R';
+    return 'V';
+  };
+
   return (
     <header className="bg-[#0e4359] text-white shadow-lg sticky top-0 z-40 border-b border-[#13536d]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -92,12 +104,12 @@ export default function Navbar({ onOpenNewModal, onExport, searchQuery, onSearch
             {user && (
               <div className="flex items-center gap-2 bg-[#092d3c]/60 px-3 py-1.5 rounded-xl border border-white/10 text-xs">
                 <div className="w-7 h-7 rounded-full bg-[#a78f31]/20 border border-[#a78f31] flex items-center justify-center text-[#f5d77f] font-bold">
-                  {user.role === 'admin' ? 'A' : 'R'}
+                  {getRoleInitial()}
                 </div>
                 <div className="hidden lg:block text-left">
                   <p className="font-semibold text-white leading-tight">{user.name}</p>
                   <span className="text-[10px] font-medium uppercase tracking-wider text-emerald-300">
-                    {user.role === 'admin' ? 'Translator' : 'Reviewer'}
+                    {getRoleLabel()}
                   </span>
                 </div>
               </div>

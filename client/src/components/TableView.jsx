@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function TableView({ scripts, onEdit, onStatusToggle, onDelete }) {
   const { user, showToast } = useAuth();
+  const isViewer = user?.role === 'viewer';
 
   const copyScript = (script) => {
     const formatted = `Code: ${script.orphan_code}\nChild: ${script.child_name}\n\n${script.script_text}`;
@@ -43,26 +44,48 @@ export default function TableView({ scripts, onEdit, onStatusToggle, onDelete })
                     <p className="line-clamp-2">{s.script_text}</p>
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <button
-                      onClick={() => onStatusToggle(s.id, isApproved ? 'waiting' : 'approved')}
-                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase transition ${
-                        isApproved
-                          ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
-                          : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
-                      }`}
-                    >
-                      {isApproved ? (
-                        <>
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          <span>Approved</span>
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="w-3 h-3 text-amber-600" />
-                          <span>Waiting</span>
-                        </>
-                      )}
-                    </button>
+                    {isViewer ? (
+                      <span
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase ${
+                          isApproved
+                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                            : 'bg-amber-100 text-amber-800 border border-amber-300'
+                        }`}
+                      >
+                        {isApproved ? (
+                          <>
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Approved</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            <span>Waiting</span>
+                          </>
+                        )}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => onStatusToggle(s.id, isApproved ? 'waiting' : 'approved')}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold uppercase transition ${
+                          isApproved
+                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300'
+                            : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300'
+                        }`}
+                      >
+                        {isApproved ? (
+                          <>
+                            <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                            <span>Approved</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="w-3 h-3 text-amber-600" />
+                            <span>Waiting</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </td>
                   <td className="py-3 px-4 text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -73,13 +96,15 @@ export default function TableView({ scripts, onEdit, onStatusToggle, onDelete })
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
-                      <button
-                        onClick={() => onEdit(s)}
-                        title="Edit Script"
-                        className="p-1.5 text-[#0e4359] hover:bg-[#0e4359]/10 rounded"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
+                      {!isViewer && (
+                        <button
+                          onClick={() => onEdit(s)}
+                          title="Edit Script"
+                          className="p-1.5 text-[#0e4359] hover:bg-[#0e4359]/10 rounded"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       {user?.role === 'admin' && (
                         <button
                           onClick={() => onDelete(s.id)}

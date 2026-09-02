@@ -4,7 +4,7 @@ const DB = require('../db');
 const { authenticateToken, requireRole } = require('../auth');
 const { generateScriptsDocx } = require('../utils/docx_export');
 
-// GET /api/scripts - List scripts with search & filter
+// GET /api/scripts - List scripts with search & filter (All authenticated roles)
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, search, limit, offset } = req.query;
@@ -16,7 +16,7 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/scripts/stats - Dashboard summary stats
+// GET /api/scripts/stats - Dashboard summary stats (All authenticated roles)
 router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const stats = await DB.getStats();
@@ -27,7 +27,7 @@ router.get('/stats', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/scripts/export/word - Export scripts as Word .docx
+// GET /api/scripts/export/word - Export scripts as Word .docx (All authenticated roles)
 router.get('/export/word', authenticateToken, async (req, res) => {
   try {
     const { status } = req.query;
@@ -63,8 +63,8 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/scripts - Create new script (Admin/Translator)
-router.post('/', authenticateToken, async (req, res) => {
+// POST /api/scripts - Create new script (Admin only)
+router.post('/', authenticateToken, requireRole(['admin']), async (req, res) => {
   try {
     const { orphan_code, child_name, script_text, notes } = req.body;
     if (!script_text) {
@@ -86,8 +86,8 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// PUT /api/scripts/:id - Update script text or details
-router.put('/:id', authenticateToken, async (req, res) => {
+// PUT /api/scripts/:id - Update script text or details (Admin & Reviewer only)
+router.put('/:id', authenticateToken, requireRole(['admin', 'reviewer']), async (req, res) => {
   try {
     const { script_text, child_name, orphan_code, notes, status } = req.body;
     const updated = await DB.updateScript(
@@ -107,8 +107,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// PATCH /api/scripts/:id/status - Update status (Approve / Return to Waiting)
-router.patch('/:id/status', authenticateToken, async (req, res) => {
+// PATCH /api/scripts/:id/status - Update status (Admin & Reviewer only)
+router.patch('/:id/status', authenticateToken, requireRole(['admin', 'reviewer']), async (req, res) => {
   try {
     const { status, notes } = req.body;
     if (!status || !['waiting', 'approved'].includes(status)) {

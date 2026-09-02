@@ -21,5 +21,11 @@ module.exports = {
     password: process.env.REVIEWER_PASSWORD || 'ON@Review#7315*Scripts',
     name: 'Content Reviewer',
     role: 'reviewer'
+  },
+  DEFAULT_VIEWER: {
+    username: process.env.VIEWER_USERNAME || 'viewer',
+    password: process.env.VIEWER_PASSWORD || 'ON@View#8264*Access',
+    name: 'Viewer / Observer',
+    role: 'viewer'
   }
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Edit3, CheckCircle2, Clock, Copy, Check, Trash2, UserCheck, AlertCircle, Share2 } from 'lucide-react';
+import { Edit3, CheckCircle2, Clock, Copy, Check, Trash2, UserCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function ScriptCard({ script, onEdit, onStatusToggle, onDelete }) {
@@ -8,6 +8,7 @@ export default function ScriptCard({ script, onEdit, onStatusToggle, onDelete })
   const [loadingStatus, setLoadingStatus] = useState(false);
 
   const isApproved = script.status === 'approved';
+  const isViewer = user?.role === 'viewer';
 
   const handleCopy = () => {
     const formatted = `Code: ${script.orphan_code}\nChild: ${script.child_name}\n\n${script.script_text}`;
@@ -18,8 +19,8 @@ export default function ScriptCard({ script, onEdit, onStatusToggle, onDelete })
   };
 
   const handleToggle = async () => {
-    if (!user) {
-      showToast('Please sign in to review or change status.', 'warning');
+    if (!user || isViewer) {
+      showToast('You have read-only access.', 'warning');
       return;
     }
     const nextStatus = isApproved ? 'waiting' : 'approved';
@@ -119,14 +120,16 @@ export default function ScriptCard({ script, onEdit, onStatusToggle, onDelete })
               {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
             </button>
 
-            <button
-              onClick={() => onEdit(script)}
-              className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-slate-700 hover:text-[#0e4359] bg-slate-100 hover:bg-slate-200 rounded-lg transition"
-              title="Edit script text"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>Edit</span>
-            </button>
+            {!isViewer && (
+              <button
+                onClick={() => onEdit(script)}
+                className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 text-slate-700 hover:text-[#0e4359] bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                title="Edit script text"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit</span>
+              </button>
+            )}
 
             {user?.role === 'admin' && (
               <button
@@ -139,28 +142,30 @@ export default function ScriptCard({ script, onEdit, onStatusToggle, onDelete })
             )}
           </div>
 
-          {/* Primary Action Button: Approve / Unapprove */}
-          <button
-            onClick={handleToggle}
-            disabled={loadingStatus}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition transform active:scale-95 shadow-xs ${
-              isApproved
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700'
-                : 'bg-[#a78f31] hover:bg-[#917b27] text-white border border-[#8d7722]'
-            }`}
-          >
-            {isApproved ? (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Approved</span>
-              </>
-            ) : (
-              <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-white/90" />
-                <span>Mark as Reviewed</span>
-              </>
-            )}
-          </button>
+          {/* Primary Action Button: Approve / Unapprove (Hidden for Viewer role) */}
+          {!isViewer && (
+            <button
+              onClick={handleToggle}
+              disabled={loadingStatus}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition transform active:scale-95 shadow-xs ${
+                isApproved
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700'
+                  : 'bg-[#a78f31] hover:bg-[#917b27] text-white border border-[#8d7722]'
+              }`}
+            >
+              {isApproved ? (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Approved</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white/90" />
+                  <span>Mark as Reviewed</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
